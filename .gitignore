@@ -1,0 +1,5 @@
+.env
+.venv/
+ENV/
+.idea/
+local_firefly/
