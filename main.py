@@ -1,3 +1,4 @@
+import argparse
 import json
 import logging
 import os
@@ -42,9 +43,7 @@ def convert_transaction(transaction, firefly_accounts, firefly_account_id):
     return data
 
 
-def main():
-    logging.basicConfig(level=logging.WARNING)
-    load_dotenv()
+def import_transactions(days: int):
     firefly_config = firefly_iii_client.configuration.Configuration(host=os.environ["FIREFLY_URL"],
                                                                     access_token=os.environ["FIREFLY_ACCESS_TOKEN"])
     with firefly_iii_client.ApiClient(firefly_config) as api_client:
@@ -64,7 +63,7 @@ def main():
             os.environ["FINTS_USER"],
             os.environ.get("FINTS_PIN") or getpass.getpass('Enter PIN:'),
             os.environ["FINTS_URL"],
-            product_id='0F4CA8A225AC9799E6BE3F334'
+            product_id=os.environ["FINTS_PRODUCT_ID"],
         )
         minimal_interactive_cli_bootstrap(f)
         with f:
@@ -82,7 +81,7 @@ def main():
                 if not (firefly_account_id := firefly_accounts.get(account.iban)):
                     print(f"No Firefly account found for {account.iban}")
                     continue
-                for transaction in f.get_transactions(account, start_date=today - timedelta(days=7), end_date=today):
+                for transaction in f.get_transactions(account, start_date=today - timedelta(days=days), end_date=today):
                     data = convert_transaction(transaction, firefly_accounts, firefly_account_id)
                     try:
                         api_response = transaction_api.store_transaction({"error_if_duplicate_hash": True, "transactions": [data]})
@@ -96,4 +95,10 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    logging.basicConfig(level=logging.WARNING)
+    load_dotenv()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-d", "--days", type=int, default=7,
+                        help="Number of days (backwards from today) to fetch transactions for (default: 7)")
+    args = parser.parse_args()
+    import_transactions(args.days)
