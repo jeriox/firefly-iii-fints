@@ -7,7 +7,7 @@ import getpass
 
 import firefly_iii_client
 from dotenv import load_dotenv
-from fints.client import FinTS3PinTanClient
+from fints.client import FinTS3PinTanClient, NeedTANResponse
 from fints.utils import minimal_interactive_cli_bootstrap
 
 
@@ -68,10 +68,16 @@ def import_transactions(days: int):
         minimal_interactive_cli_bootstrap(f)
         with f:
             # Since PSD2, a TAN might be needed for dialog initialization. Let's check if there is one required
-            if f.init_tan_response:
-                print("A TAN is required", f.init_tan_response.challenge)
-                tan = input('Please enter TAN:')
-                f.send_tan(f.init_tan_response, tan)
+            if tan_required := f.init_tan_response:
+                print("2FA is required: ", f.init_tan_response.challenge)
+                if tan_required.decoupled:
+                    while True:
+                        input("Please confirm the action on your device. Afterwards press enter to continue.")
+                        if not isinstance(f.send_tan(f.init_tan_response, ""), NeedTANResponse):
+                            break
+                else:
+                    tan = input('Please enter TAN:')
+                    f.send_tan(f.init_tan_response, tan)
 
             # Fetch accounts
             accounts = f.get_sepa_accounts()
