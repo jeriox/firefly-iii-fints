@@ -19,7 +19,9 @@ def convert_transaction(transaction, firefly_accounts, firefly_account_id):
     data = {
         "amount": str(abs(transaction.data["amount"].amount)),
         "var_date": transaction.data["date"],
-        "description": transaction.data.get("deviate_applicant") or transaction.data.get("purpose")
+        "description": transaction.data["applicant_name"] if transaction.data["posting_text"] == "KARTENZAHLUNG" else transaction.data["purpose"],
+        "sepa_ct_id": transaction.data.get("end_to_end_reference", ""),
+        "internal_reference": transaction.data["bank_reference"],
     }
 
     if transaction.data["status"] == "C":  # credit
@@ -28,8 +30,7 @@ def convert_transaction(transaction, firefly_accounts, firefly_account_id):
             data["type"] = "transfer"
             data["source_id"] = firefly_source_id
         else:
-            data["source_name"] = transaction.data.get("deviate_applicant") or transaction.data.get(
-                "applicant_name")
+            data["source_name"] = transaction.data["applicant_name"]
             data["type"] = "deposit"
     elif transaction.data["status"] == "D":  # debit
         data["source_id"] = firefly_account_id
@@ -37,8 +38,7 @@ def convert_transaction(transaction, firefly_accounts, firefly_account_id):
             data["type"] = "transfer"
             data["destination_id"] = firefly_destination_id
         else:
-            data["destination_name"] = transaction.data.get("deviate_applicant") or transaction.data.get(
-                "applicant_name")
+            data["destination_name"] = transaction.data["applicant_name"]
             data["type"] = "withdrawal"
     return data
 
