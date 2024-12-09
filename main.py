@@ -68,16 +68,12 @@ def import_transactions(days: int):
         minimal_interactive_cli_bootstrap(f)
         with f:
             # Since PSD2, a TAN might be needed for dialog initialization. Let's check if there is one required
-            if tan_required := f.init_tan_response:
+            if f.init_tan_response:
                 print("2FA is required: ", f.init_tan_response.challenge)
-                if tan_required.decoupled:
-                    while True:
-                        input("Please confirm the action on your device. Afterwards press enter to continue.")
-                        if not isinstance(f.send_tan(f.init_tan_response, ""), NeedTANResponse):
-                            break
-                else:
-                    tan = input('Please enter TAN:')
-                    f.send_tan(f.init_tan_response, tan)
+                # temporary hack because challenge is not marked as decoupled
+                f.init_tan_response.decoupled = True
+                input("Press enter after confirming the transaction in your app")
+                f.send_tan(f.init_tan_response, "")
 
             # Fetch accounts
             accounts = f.get_sepa_accounts()
@@ -101,7 +97,7 @@ def import_transactions(days: int):
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.WARNING)
+    logging.basicConfig(level=logging.INFO)
     load_dotenv()
     parser = argparse.ArgumentParser()
     parser.add_argument("-d", "--days", type=int, default=7,
