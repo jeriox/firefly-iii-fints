@@ -9,6 +9,7 @@ readme = "README.md"
 python = "^3.11"
 python-dotenv = "^1.0.1"
 Firefly-III-API-Client = "^2.0.12.0"
+fints = "^4.2.3"
 
 
 [build-system]
