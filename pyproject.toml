@@ -6,7 +6,7 @@ authors = ["Julian B. <jeriox@users.noreply.github.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = "^3.10"
 python-dotenv = "^1.0.1"
 Firefly-III-API-Client = "^2.0.12.0"
 fints = "^4.2.3"

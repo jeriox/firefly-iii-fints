@@ -19,7 +19,7 @@ def convert_transaction(transaction, firefly_accounts, firefly_account_id):
     data = {
         "amount": str(abs(transaction.data["amount"].amount)),
         "var_date": transaction.data["date"],
-        "description": transaction.data["applicant_name"] if transaction.data["posting_text"] == "KARTENZAHLUNG" else transaction.data["purpose"],
+        "description": (transaction.data["applicant_name"] if transaction.data["posting_text"] == "KARTENZAHLUNG" else transaction.data["purpose"]) or "-",
         "sepa_ct_id": transaction.data.get("end_to_end_reference", ""),
         "internal_reference": transaction.data["bank_reference"],
     }
